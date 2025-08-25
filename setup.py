@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="medical-chatbot",
+    name="medical-chatbot-genai",
     version="0.0.0",
     author="Srinivasan G",
     author_email="gopalasr@gmail.com",

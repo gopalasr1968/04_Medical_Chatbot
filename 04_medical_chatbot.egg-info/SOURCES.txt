@@ -5,7 +5,6 @@ setup.py
 04_medical_chatbot.egg-info/PKG-INFO
 04_medical_chatbot.egg-info/SOURCES.txt
 04_medical_chatbot.egg-info/dependency_links.txt
-04_medical_chatbot.egg-info/requires.txt
 04_medical_chatbot.egg-info/top_level.txt
 src/__init__.py
 src/helper.py
