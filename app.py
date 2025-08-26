@@ -1,5 +1,4 @@
-from IPython import embed
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template
 from langchain_pinecone import PineconeVectorStore
 from src.helper import download_hugging_face_embeddings
 from langchain_openai import OpenAI
@@ -15,11 +14,16 @@ app = Flask(__name__)
 
 
 # Load environment variables
-from dotenv import load_dotenv
+
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+if PINECONE_API_KEY is None or OPENAI_API_KEY is None:
+    raise EnvironmentError(
+        "PINECONE_API_KEY and OPENAI_API_KEY must be set in the environment."
+    )
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
@@ -28,23 +32,28 @@ embeddings = download_hugging_face_embeddings()
 
 index_name = "medicalchatbot"
 
-docsearch = PineconeVectorStore.from_existing_index(embedding=embeddings, index_name=index_name)
+docsearch = PineconeVectorStore.from_existing_index(
+    embedding=embeddings, index_name=index_name
+)
 
 # check as docsearch to fetch relevent docs.
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3})
+retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
 api_key = os.environ.get("OPENAI_API_KEY")
 print(api_key)
 llm = OpenAI(temperature=0.4, max_tokens=500)
 
 
-prompt = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),
-    ("human", f"{input} Do not repeat the question in the reply."),
-])
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        ("human", f"{input} Do not repeat the question in the reply."),
+    ]
+)
 
 question_answer_chain = create_stuff_documents_chain(llm=llm, prompt=prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
 
 @app.route("/")
 def index():
@@ -61,10 +70,9 @@ def chat():
         return "No message received.", 400
     print(msg)
     response = rag_chain.invoke({"input": msg})
-    print(response['answer'])
+    print(response["answer"])
     return str(response["answer"])
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
-
